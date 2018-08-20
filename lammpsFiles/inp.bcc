@@ -1,0 +1,70 @@
+# Define temperature parameters
+variable    temperature equal  0.92     # Simulation temperature in reduced units
+variable    tempDamp equal     0.0046    # Relaxation time of themostat 100 timesteps
+
+# Define pressure parameters
+variable    pressure equal     5.68   	# Pressure in reduced units
+variable    pressDamp equal    0.046     # Relaxation time; 1000 timesteps
+
+# Simulation setup
+units       real    
+atom_style  full
+boundary    p p p
+variable    out_freq equal  1000    # Thermo output frequency
+variable    out_freq2 equal 5000   	# Dump output frequency
+variable    s string        bcc     # Input system type
+
+
+###############################################################################################################################################
+read_data        lammpsFiles/system_$s.data
+# read_restart   x.r_6-35000.9500000
+
+#Reset the timestep
+#reset_timestep 0
+
+# ------------------------------------------------------------------------------
+### LJ Parameters ###
+pair_style lj/cut 2.5
+
+# Load configuration
+bond_style      harmonic
+angle_style     harmonic
+# kspace_style    pppm/tip4p 1e-4 # Default value from LAMMPS
+
+# LJ particles
+pair_coeff      1 1 1.0 1.0 # Only one type of particles
+
+bond_coeff      1 0.00 0.0 
+# -------------------------------------------------------------------------------
+# create groups ###
+group lj        type 1
+
+## set charges - beside manually ###
+set group lj charge     0.0
+
+###########################################################################################################################################
+
+neighbor       0.3 bin
+neigh_modify   every 2 delay 10 check no
+
+ fix             bal all balance 1000 1.05 shift x 20 1.05
+
+   # velocity   sheet create 300 4928459
+   # velocity   water create 300 4928460 
+   # velocity   water zero linear
+   # velocity   sheet zero linear
+
+log 	       log_$s
+
+timestep       0.000046   # Timestep 1 fs
+thermo         1000
+
+thermo_style    custom step temp pe etotal lx 
+thermo_modify   flush yes norm no
+
+ fix            1 lj npt temp ${temperature} ${temperature} ${tempDamp} iso ${pressure} ${pressure} ${pressDamp} # Nose-Hoover barostat
+ dump           1 all custom 5000 dump-$s.lammpstrj id mol type x y z
+ dump_modify    1 sort id
+# restart        500000 x.r_$s
+# run            1000000
+ 
