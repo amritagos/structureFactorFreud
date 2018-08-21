@@ -1,0 +1,4 @@
+# Ignore log files
+log*
+# Ignore image files produced
+*.png
