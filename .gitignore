@@ -2,3 +2,6 @@
 log*
 # Ignore image files produced
 *.png
+# Ignore checkpoint files
+.ipynb_checkpoints/
+
